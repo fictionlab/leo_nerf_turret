@@ -5,7 +5,8 @@
 The project is basically what the title says: a NERF blaster turret attached to a Leo Rover.
 It's cool and sort of works, you can see it action here: FUTURE YOUTUBE LINK or here: FUTURE BLOG LINK.
 
-As of right now the turret and the rover can be controlled with a joystick so I can blast anyone I want with from safety. 
+As of right now the turret and the rover can be controlled with a joystick so I can blast anyone I want with it from safety.
+Plus: A camera attached to the rover can be used to track humans. 
 The goal is to develop this project further the moment I come up with ideas for the development.
 
 ## why
