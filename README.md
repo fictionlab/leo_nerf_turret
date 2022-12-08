@@ -25,6 +25,19 @@ I'm learning, but it's going to take time before I'll call my software "kinda go
 
 ## How to use it:
 
+### Software 
+
+Dynamixel SDK is necessary to run this project. Everything you'll need to learn how to get a hold on it can be sound here: https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/download/
+
+In it's current state It's also using another package I've created - used to control Leo Rover with mecanum wheels.
+This one: https://github.com/fictionlab/leo_mecanum
+
+Build the project and run:
+
+```bash
+roslaunch nerf_turret turret_camera.launch
+```
+
 ### Mechanics:
 
 The 3D printed parts can be found here: FUTURE LINK HERE.
@@ -52,19 +65,6 @@ Parts list:
 
 In order to make the Nerf gun remote-controlled I've created a separate circuit that lets me control the motors through the use of 2 MOSFETs. 
 In the future I'll try to provide some kind of schematics. As of right now you are left to yourself. 
-
-### Software 
-
-Dynamixel SDK is necessary to run this project. Everything you'll need to learn how to get a hold on it can be sound here: https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/download/
-
-In it's current state It's also using another package I've created - used to control Leo Rover with mecanum wheels.
-This one: FUTURE LINK
-
-Build the project and run:
-
-```bash
-roslaunch nerf_turret turret_camera.launch
-```
 
 ## Current Features:
 * non-physical control of NERF Blaster
