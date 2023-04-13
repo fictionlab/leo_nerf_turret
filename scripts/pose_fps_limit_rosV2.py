@@ -3,6 +3,8 @@ import cv2
 import mediapipe as mp
 import time
 from geometry_msgs.msg import Twist
+
+
 rospy.init_node('nerf_turret_camera_node', anonymous=True)
 command_publisher = rospy.Publisher("/nerf_turret/command",Twist,queue_size=1)
 
@@ -10,7 +12,6 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
-fps_limit = 200
 startTime = time.time()
 
 def draw_crosshair(image):
@@ -44,41 +45,48 @@ def react_to_target(image, landmark):
 
 # "webcam" input:
 cap = cv2.VideoCapture(0)
+frames = 0
+startTime = time.time()
 with mp_pose.Pose(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5,
     model_complexity=0) as pose:
   while cap.isOpened():
+    frames += 1
     success, image = cap.read()
-    if (time.time()- startTime) > 1/fps_limit:
-      startTime = time.time()
-      image = cv2.resize(image,(640,480))
-      if not success:
-        print("Ignoring empty camera frame.")
-        # If loading a video, use 'break' instead of 'continue'.
-        continue
+  
+    image = cv2.resize(image,(960,540))
+    if not success:
+      print("Ignoring empty camera frame.")
+      # If loading a video, use 'break' instead of 'continue'.
+      continue
 
-      # To improve performance, optionally mark the image as not writeable to
-      # pass by reference.
-      image.flags.writeable = False
-      image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-      results = pose.process(image)
+    # To improve performance, optionally mark the image as not writeable to
+    # pass by reference.
+    image.flags.writeable = False
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = pose.process(image)
 
-      # Draw the pose annotation on the image.
-      image.flags.writeable = True
-      image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-      mp_drawing.draw_landmarks(
-          image,
-          results.pose_landmarks,
-          mp_pose.POSE_CONNECTIONS,
-          landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-      if results.pose_landmarks:
-        image = react_to_target(image, results.pose_landmarks.landmark[0])
-      # Flip the image horizontally for a selfie-view display.
-      image = draw_crosshair(image)
+    # Draw the pose annotation on the image.
+    image.flags.writeable = True
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    mp_drawing.draw_landmarks(
+        image,
+        results.pose_landmarks,
+        mp_pose.POSE_CONNECTIONS,
+        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+    if results.pose_landmarks:
+      #start = time.time()
+      image = react_to_target(image, results.pose_landmarks.landmark[0])
+      #print("debug mode took: ", time.time()-start)
+    # Flip the image horizontally for a selfie-view display.
+    image = draw_crosshair(image)
+    
+    cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
       
-      cv2.imshow('MediaPipe Pose', cv2.flip(image, 1))
-      # print("---%s seconds since last frame", (time.time() - startTime))
     if cv2.waitKey(5) & 0xFF == ord('q'):
       break
+
+print("avg fps: ", round(frames/(time.time()-startTime),2))
+    
 cap.release()

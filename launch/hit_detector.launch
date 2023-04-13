@@ -1,0 +1,7 @@
+<launch>
+  
+  <node name="IMU_listener"         pkg="nerf_turret" type="IMU_hit_detector_with_filter.py"> </node>
+  <node name="piezo_listener"       pkg="nerf_turret" type="microphone_hit_detector.py"> </node>
+  <node name="HIT_message_listener" pkg="nerf_turret" type="hit_event_handler.py"> </node>
+
+</launch>
