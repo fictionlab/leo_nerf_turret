@@ -14,6 +14,7 @@ def check_hit_event():
     if abs(last_IMU_predicted_hit - last_PIEZO_predicted_hit) < rospy.Duration(0,500000000):
         print("HIT")
         hit_confirm.publish(msg)
+        rospy.sleep(0.1)
 
 
 def msg_callback(data):

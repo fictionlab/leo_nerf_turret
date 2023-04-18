@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 from collections import deque
 
+
 # Filter buffer length
 BUFFER = 50
 # Hit detection threshold value
@@ -51,13 +52,33 @@ def filter_data():
     accel_filtered['y'] = filtfilt(b, a, accel['y'])
     accel_filtered['z'] = filtfilt(b, a, accel['z'])
     
-def get_jerk():
+def update_jerk():
+    
+    first = True
     if len(accel['x']) < 3:
         return
     
-    for i in range (10):
-        jerk.append(math.sqrt((accel['x'][-(i+1)] - accel['x'][-i])**2 + (accel['y'][-(i+1)] - accel['y'][-i])**2 + (accel['z'][-(i+1)] - accel['z'][-i])**2))
-
+    temp = [0,0,0]
+    temp_value = 0
+    
+    for i in range (12):
+        x = accel['x'][-(i+1)] - accel['x'][-i]
+        y = accel['y'][-(i+1)] - accel['y'][-i]
+        z = accel['z'][-(i+1)] - accel['z'][-i]
+        jerk_value = math.sqrt((x)**2 + (y)**2 + (z)**2)
+        jerk.append(jerk_value)
+        
+        if jerk_value > THRESHOLD:
+            temp = [x,y,z]
+            temp_value = jerk_value
+            
+            msg.stamp = rospy.Time.now()
+            msg.seq += 1
+            hit_confirm.publish(msg)
+            
+    if max(temp) > 0:
+        print("jerk value: ", temp_value)
+        print("jerk (x,y,z): ", temp)
 
 def imu_callback(data):
     global counter
@@ -66,20 +87,14 @@ def imu_callback(data):
     
     if counter > counter_max:
         filter_data()                               # THIS IS REALLY BAD - I SHOULD BE USING SOME LIVE FILTERING SYSTEM, AND IT DOESN'T. JUST LOOKS AT ALL THE GATHERED DATA EVERY TIME
-        get_jerk()
+        update_jerk()
         counter = 1
-        max_j = max(jerk)
-        
-        if max_j > THRESHOLD:
-            print(max_j)
-            
-            msg.stamp = rospy.Time.now()
-            msg.seq += 1
-            hit_confirm.publish(msg)
+
 
 #ROS setup
 rospy.init_node('IMU_listener', anonymous=True)
-imu_sub = rospy.Subscriber("imu/data_raw",Imu, imu_callback)
+# imu_sub = rospy.Subscriber("imu/data_raw",Imu, imu_callback)
+imu_sub = rospy.Subscriber("imu/data",Imu, imu_callback)
 hit_confirm = rospy.Publisher("chatter",Header,queue_size=10)
 #msg parameters
 msg = Header()
