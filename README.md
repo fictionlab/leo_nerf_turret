@@ -3,7 +3,7 @@
 ## Overview
 
 The project is basically what the title says: a NERF blaster turret attached to a Leo Rover.
-It's cool and sort of works, you can see it action here: FUTURE YOUTUBE LINK or here: FUTURE BLOG LINK.
+It's cool and sort of works, you can see it action here: FUTURE YOUTUBE LINK or here: https://hackaday.io/project/189349-nerf-turret-mounted-on-a-leo-rover
 
 As of right now the turret and the rover can be controlled with a joystick so I can blast anyone I want with it from safety.
 Plus: A camera attached to the rover can be used to track humans. 
@@ -31,7 +31,7 @@ I'm learning, but it's going to take time before I'll call my software "kinda go
 Dynamixel SDK is necessary to run this project. Everything you'll need to learn how to get a hold on it can be sound here: https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/download/
 
 In it's current state It's also using another package I've created - used to control Leo Rover with mecanum wheels.
-This one: https://github.com/fictionlab/leo_mecanum
+This one: https://github.com/fictionlab/leo_mecanum   ---- kacper@fictionlab.pl <- hit me up if i've forgotten to publish it
 
 Build the project and run:
 
@@ -41,49 +41,20 @@ roslaunch nerf_turret turret_camera.launch
 
 ### Mechanics:
 
-The 3D printed parts can be found here: FUTURE LINK HERE.
-As of right now I'm not happy enought about how it works and I'm 100% sure it's going to go through a few changes. That's why, as of right now that's it when it comes to the mechanical part of the instruction. Good luck.
 
 Parts list:
 * Leo rover (can be skipped really. Or changed for any other mobile platform running ROS as long as you are willing to tinker with it)
 * Nerf Perses (Used here because it can be easily converted into a remote-controlled doomsday weapon )
 * 3D prints
-* 2x    Dynamixel XL430-W250
-* any Arduino
-* U2D2
-* Dynamixel power hub
-* 8x    14mm M2 screws 
-* 10x   10mm M5 screws
-* 6x    35mm M5 screws
-* 6(8)  12mm M4 screws
-* bunch M4 and M5 nuts
-* 2x    61910 bearing
-* 2x    16007 bearing
 
-
+I'm not happy enought about how it works and I'm 100% sure it's going to go through a few changes. That's why: that's it when it comes to the mechanical part of the instruction, for now. 
 
 ### Electronics:
 
 In order to make the Nerf gun remote-controlled I've created a separate circuit that lets me control the motors through the use of 2 MOSFETs. 
-In the future I'll try to provide some kind of schematics. As of right now you are left to yourself. 
+In the future I'll try to provide some kind of schematics. 
 
-## Current Features:
-* non-physical control of NERF Blaster
-* mecanum wheel driving
-* joystick control of both the rover and turret
-* abbility to home the turret
-* Turret can follow the body of a human it sees
-
-## Features to be developed:
-* drone/yellow foam balls recognition system
-* gesture recognition system
-
-##Links:
+##Links :
+* https://www.youtube.com/channel/UClapAzA65GYj-H6woUBkp9Q
 * https://github.com/LeoRover
 * https://github.com/robotis-git
-* here: POSSIBLE FUTURE YOUTUBE LINK
-* or here: POSSIBLE FUTURE BLOG LINK
-
-
-##License:
-eeeeeeeee GPL i guess - i just have to check it out
