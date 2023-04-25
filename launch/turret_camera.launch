@@ -18,7 +18,6 @@
   <node name="teleop_node" pkg="teleop_twist_joy" type="teleop_node">
     <rosparam command="load" file="$(find nerf_turret)/config/joy_mapping.yaml"/>
     <remap from="cmd_vel" to="mecanum_command"/>
-    <!-- <remap from="cmd_vel" to="cmd_vel"/> -->
   </node>
 
 </launch>
