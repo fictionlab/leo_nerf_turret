@@ -9,10 +9,10 @@ As of right now the turret and the rover can be controlled with a joystick so I 
 Plus: A camera attached to the rover can be used to track humans. 
 The goal is to develop this project further the moment I come up with ideas for the development.
 
-## why
+## Why
 Robots are cool, guns are cool -> robots with guns are even more fun. So that's why.
 
-## who
+## Who
 
 I work for Leo and my boss decided that I can try running a Youtube channel if i want to. I agreed. 
 I haven't been told what am I supposed to be doing with it so I'm trying to get as much fun from it as humanly possible while still promoting Leo Rovers.
