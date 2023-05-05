@@ -3,7 +3,7 @@
 ## Overview
 
 The project is basically what the title says: a NERF blaster turret attached to a Leo Rover.
-It's cool and sort of works, you can see it action here: FUTURE YOUTUBE LINK or here: https://hackaday.io/project/189349-nerf-turret-mounted-on-a-leo-rover
+It's cool and sort of works, you can see it action here: https://youtu.be/yBr_lUw0h70 or here: https://hackaday.io/project/189349-nerf-turret-mounted-on-a-leo-rover
 
 As of right now the turret and the rover can be controlled with a joystick so I can blast anyone I want with it from safety.
 Plus: A camera attached to the rover can be used to track humans. 
