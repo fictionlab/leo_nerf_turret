@@ -50,21 +50,21 @@ using namespace dynamixel;
 #define ADDR_VEL_PI_P         78            //default value 100
 #define ADDR_VEL_PI_I         76            //default value 1000
 
-
 // Protocol version
 #define PROTOCOL_VERSION      2.0             // Default Protocol version of DYNAMIXEL X series.
 
 // Default setting
 #define DXL1_ID               1               // DXL1 ID - tilt
+#define TILT_MIN              4100
+#define TILT_MAX              7800
+#define TILT_SPD              40
 #define DXL2_ID               2               // DXL2 ID - pan
+#define PAN_MIN               100
+#define PAN_MAX               3950
+#define PAN_SPD               40
 
 #define BAUDRATE              1000000         // Default Baudrate of DYNAMIXEL X series
 #define DEVICE_NAME           "/dev/ttyUSB0"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
-
-//State LED
-#define REDLED                10
-#define GREENLED              11
-#define BLUELED               12
 
 //Flags
 bool a_button_pressed = false;
@@ -78,19 +78,8 @@ ros::Time lastShootCommand;
 
 ros::Publisher trigger_pub;
 ros::Publisher spin_pub;
-ros::Publisher ledControl_pub;
 
 std_msgs::Bool bool_msg;
-
-void toggle_led(int ledID){
-  /**
-   * Sends a message ment to toggle chosen LED
-  */
-
-  std_msgs::Int8 msg;
-  msg.data = ledID;
-  ledControl_pub.publish(msg);
-}
 
 //Map value from one range into another
 float mapValue(float input, float minValInput, float maxValInput, float minValOut, float maxValOut){
@@ -151,7 +140,6 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr & msg){
   if(!a_button_pressed && msg->buttons[0]){                     
     current_mode++;
     current_mode = current_mode%2;
-    toggle_led(GREENLED);
   }
   a_button_pressed = msg->buttons[0];
 
@@ -177,17 +165,12 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr & msg){
   float msg_speed_x = msg->axes[3];
   float msg_speed_y = msg->axes[4];
 
-  //Pn
-  int speed_id2 = mapValue(msg_speed_x,-1,1,40,-40);              //Hardcoded motor speed as the last two parameters :) 
-  //Tilt
-  int speed_id1 = mapValue(msg_speed_y,-1,1,30,-30);              
-  int speed_id3 = mapValue(msg_speed_y,-1,1,-30,30);      
-
+    //Tilt
+  int speed_id1 = mapValue(msg_speed_y,-1,1,TILT_SPD,-TILT_SPD); 
+  updateDynamixel(1,speed_id1,TILT_MIN,TILT_MAX);  
   //Pan
-  updateDynamixel(2,speed_id2,200,3900);                          //Hardcoded min and max position for pan as the last two parameters :)
-  //Tilt
-  updateDynamixel(1,speed_id1,1900,2350);
-  updateDynamixel(3,speed_id3,1750,2200);
+  int speed_id2 = mapValue(msg_speed_x,-1,1,PAN_SPD,-PAN_SPD);
+  updateDynamixel(2,speed_id2,PAN_MIN,PAN_MAX);                          //Hardcoded min and max position for pan as the last two parameters :)
 }
 
 void cameraCallback(const geometry_msgs::Twist::ConstPtr & msg){
@@ -201,17 +184,15 @@ void cameraCallback(const geometry_msgs::Twist::ConstPtr & msg){
   float msg_speed_x = msg->angular.z;
   float msg_speed_y = msg->angular.x;
 
-  int speed_id1 = mapValue(msg_speed_y,-1,1,30,-30);              //Hardcoded motor speed as the last two parameters :) 
-  int speed_id2 = mapValue(msg_speed_x,-1,1,40,-40);
-  int speed_id3 = mapValue(msg_speed_y,-1,1,-30,30);
+  int speed_id1 = mapValue(msg_speed_y,-1,1,TILT_SPD,-TILT_SPD);              //Hardcoded motor speed as the last two parameters :) 
+  int speed_id2 = mapValue(msg_speed_x,-1,1,PAN_SPD,-PAN_SPD);
 
   lastMoveCommand = ros::Time::now();
-
-  //Pan
-  updateDynamixel(2,speed_id2,200,3900);                          //Hardcoded min and max position for pan as the last two parameters :)
   //Tilt
-  updateDynamixel(1,speed_id1,1900,2350);
-  updateDynamixel(3,speed_id3,1750,2200);
+  updateDynamixel(1,speed_id1,TILT_MIN,TILT_MAX);
+  //Pan
+  updateDynamixel(2,speed_id2,PAN_MIN,PAN_MAX);                          //Hardcoded min and max position for pan as the last two parameters :)
+
 }
 
 void changePositionPIDValues(int id, uint16_t kp, uint16_t ki, uint16_t kd){
@@ -318,12 +299,6 @@ int main(int argc, char ** argv)
 
   trigger_pub =     nh.advertise<std_msgs::Bool>("nerf/toggle_trigger", 1000);
   spin_pub =        nh.advertise<std_msgs::Bool>("nerf/toggle_spin", 1000);
-  ledControl_pub =  nh.advertise<std_msgs::Int8>("nerf/control_led",1000);
-
-  //Leds start turned on. Turn them off.
-  toggle_led(REDLED);
-  toggle_led(BLUELED);
-  toggle_led(GREENLED);
 
   //Dynamixel Setup
   uint8_t dxl_error = 0;
@@ -367,9 +342,7 @@ int main(int argc, char ** argv)
   // before i send any message to the topics it's subscribing to <-- makes it go craaaaazy
   // 60 second delay
   lastMoveCommand = ros::Time::now();
-  toggle_led(REDLED);
   while(ros::Time::now() - lastMoveCommand < ros::Duration(60)){};
-  toggle_led(REDLED);
   lastMoveCommand = ros::Time::now();
   lastShootCommand = ros::Time::now();
   
