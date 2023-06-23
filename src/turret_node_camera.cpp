@@ -55,9 +55,8 @@ using namespace dynamixel;
 #define PROTOCOL_VERSION      2.0             // Default Protocol version of DYNAMIXEL X series.
 
 // Default setting
-#define DXL1_ID               1               // DXL1 ID - tilt left
+#define DXL1_ID               1               // DXL1 ID - tilt
 #define DXL2_ID               2               // DXL2 ID - pan
-#define DXL3_ID               3               // DXL3 ID - tilt right
 
 #define BAUDRATE              1000000         // Default Baudrate of DYNAMIXEL X series
 #define DEVICE_NAME           "/dev/ttyUSB0"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
@@ -343,7 +342,6 @@ int main(int argc, char ** argv)
     return -1;
   }
 
-  //This should not be repeated 3 times
   dxl_comm_result = packetHandler->write1ByteTxRx(
     portHandler, DXL1_ID, ADDR_TORQUE_ENABLE, 1, &dxl_error);
   if (dxl_comm_result != COMM_SUCCESS) {
@@ -358,14 +356,7 @@ int main(int argc, char ** argv)
     return -1;
   }
 
-  dxl_comm_result = packetHandler->write1ByteTxRx(
-    portHandler, DXL3_ID, ADDR_TORQUE_ENABLE, 1, &dxl_error);
-  if (dxl_comm_result != COMM_SUCCESS) {
-    ROS_ERROR("Failed to enable torque for Dynamixel ID %d", DXL3_ID);
-    return -1;
-  }
-
-  for(int i = 1; i<4;i++){
+  for(int i = 1; i<3;i++){
     changeVelocityPIValues(i, 400, 3000);
     changePositionPIDValues(i, 200, 0, 3600);
     readVelocityPIValues(i);
@@ -396,16 +387,15 @@ int main(int argc, char ** argv)
   if((ros::Time::now() - lastMoveCommand) > ros::Duration(0.3)){
     lastMoveCommand = ros::Time::now();
 
-    //stop the pan//tilt dynamixels
-    updateDynamixel(DXL2_ID,0,100,4000);
-    updateDynamixel(DXL1_ID,0,1900,2350);                          //Hardcoded min and max position for tilt as the last two parametes :) 
-    updateDynamixel(DXL3_ID,0,1750,2200);
+    //stop the pan//tilt dynamixels    
+    updateDynamixel(DXL1_ID,0,4100,7800); //tilt
+    updateDynamixel(DXL2_ID,0,100,3950);  //pan
     }
   if((ros::Time::now() - lastShootCommand) > ros::Duration(0.2)){
     //stop the NERF blaster motors
     bool_msg.data = false;
-    trigger_pub.publish(bool_msg);
-    spin_pub.publish(bool_msg);
+    // trigger_pub.publish(bool_msg);
+    // spin_pub.publish(bool_msg);
     lastShootCommand = ros::Time::now();
   }
 
