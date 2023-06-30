@@ -31,6 +31,8 @@
 #include "std_msgs/Int8.h"
 #include "geometry_msgs/Twist.h"
 
+#include "PIDController.h"
+
 using namespace dynamixel;
 
 // Control table address
@@ -75,6 +77,9 @@ PacketHandler * packetHandler;
 
 ros::Time lastMoveCommand;
 ros::Time lastShootCommand;
+
+PIDController tilt_pid(TILT_MAX,0,0,TILT_MAX);
+PIDController pan_pid(TILT_MAX,0,0,PAN_MAX);
 
 ros::Publisher trigger_pub;
 ros::Publisher spin_pub;
@@ -181,12 +186,11 @@ void cameraCallback(const geometry_msgs::Twist::ConstPtr & msg){
   */
 
   if(current_mode == 0){return;}                                //If not in autonoums control mode, return
+  float tilt_error = msg->angular.z;
+  float pan_error  = msg->angular.x;
 
-  float msg_speed_x = msg->angular.z;
-  float msg_speed_y = msg->angular.x;
-
-  int speed_id1 = mapValue(msg_speed_y,-1,1,TILT_SPD,-TILT_SPD);              //Hardcoded motor speed as the last two parameters :) 
-  int speed_id2 = mapValue(msg_speed_x,-1,1,PAN_SPD,-PAN_SPD);
+  int speed_tilt  = tilt_pid.calculate(0,tilt_error,0.03);
+  int speed_pan   = pan_pid.calculate(0,pan_error,0.03);
 
   lastMoveCommand = ros::Time::now();
   //Tilt
