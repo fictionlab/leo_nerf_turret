@@ -16,12 +16,10 @@ mp_pose = mp.solutions.pose
 
 # "webcam" input:
 cap = cv2.VideoCapture(0)
-# cap = cv2.VideoCapture("http://10.0.0.1:8080/stream?topic=/camera/image_raw")
-
 # Using this command you can convert any video stream into a fake "usb camera". Which is cool and for some reason makes the whole thing work much faster
 # than with any other solution I've tested
 # ffmpeg -i http://ip_address:port/video -vf format=yuv420p -f v4l2 /dev/video0
-# ffmpeg -i http://10.0.0.1:8080/stream?topic=/usb_cam/image_raw -vf format=yuv420p -f v4l2 /dev/video0
+# for me: ffmpeg -i http://10.0.0.1:8080/stream?topic=/usb_cam/image_raw -vf format=yuv420p -f v4l2 /dev/video0
 
 
 # Limiting max possible FPS
@@ -37,7 +35,7 @@ def draw_crosshair(image):
   
   Returns
   -------
-  image: 
+  image: image with crosshair applied
   """
   
   (h,w,c) = image.shape
