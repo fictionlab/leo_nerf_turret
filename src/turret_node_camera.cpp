@@ -27,7 +27,7 @@
 #include "dynamixel_sdk/dynamixel_sdk.h"
 
 #include "sensor_msgs/Joy.h"
-#include "std_msgs/Bool.h"
+#include "std_msgs/Float32.h"
 #include "std_msgs/Int8.h"
 #include "geometry_msgs/Twist.h"
 
@@ -57,11 +57,11 @@ using namespace dynamixel;
 #define DXL1_ID               1               // DXL1 ID - tilt
 #define TILT_MIN              4100
 #define TILT_MAX              7800
-#define TILT_SPD              40
+#define TILT_SPD              90
 #define DXL2_ID               2               // DXL2 ID - pan
 #define PAN_MIN               100
 #define PAN_MAX               3950
-#define PAN_SPD               40
+#define PAN_SPD               70
 
 #define BAUDRATE              1000000         // Default Baudrate of DYNAMIXEL X series
 #define DEVICE_NAME           "/dev/ttyUSB0"  // [Linux] To find assigned port, use "$ ls /dev/ttyUSB*" command
@@ -79,7 +79,7 @@ ros::Time lastShootCommand;
 ros::Publisher trigger_pub;
 ros::Publisher spin_pub;
 
-std_msgs::Bool bool_msg;
+std_msgs::Float32 float_msg;
 
 //Map value from one range into another
 float mapValue(float input, float minValInput, float maxValInput, float minValOut, float maxValOut){
@@ -145,16 +145,17 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr & msg){
 
   //Shooting
   lastShootCommand = ros::Time::now();
-  bool_msg.data = (msg->axes[2] < -0.8);                      //Left trigger - spin the motors to build inertia if pressed
-  spin_pub.publish(bool_msg);
+  float_msg.data = msg->axes[2];                              //Left trigger - spin the motors to build inertia if pressed
 
-  if( bool_msg.data && (msg->axes[5]<-0.8)){                  //if both Left and right triggers are pressed - use the other motor to fire the balls
-    bool_msg.data = true;
-    trigger_pub.publish(bool_msg);
+  spin_pub.publish(float_msg);
+
+  if( float_msg.data){                                      //if both Left and right triggers are pressed - use the other motor to fire the balls
+    float_msg.data = msg->axes[5];
+    trigger_pub.publish(float_msg);
   }
   else{                                                       //else make sure we are not jamming the balls between non spinning motors
-    bool_msg.data = false; 
-    trigger_pub.publish(bool_msg);
+    float_msg.data = 1; 
+    trigger_pub.publish(float_msg);
   }
 
   //Pan Tilt
@@ -165,8 +166,8 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr & msg){
   float msg_speed_x = msg->axes[3];
   float msg_speed_y = msg->axes[4];
 
-    //Tilt
-  int speed_id1 = mapValue(msg_speed_y,-1,1,TILT_SPD,-TILT_SPD); 
+  //Tilt
+  int speed_id1 = mapValue(msg_speed_y,-1,1,-TILT_SPD,TILT_SPD); 
   updateDynamixel(1,speed_id1,TILT_MIN,TILT_MAX);  
   //Pan
   int speed_id2 = mapValue(msg_speed_x,-1,1,PAN_SPD,-PAN_SPD);
@@ -297,8 +298,8 @@ int main(int argc, char ** argv)
   ros::Subscriber set_speed_sub =           nh.subscribe("/joy", 10, joyCallback);
   ros::Subscriber camera_command_sub =      nh.subscribe("/nerf_turret/command",1,cameraCallback);
 
-  trigger_pub =     nh.advertise<std_msgs::Bool>("nerf/toggle_trigger", 1000);
-  spin_pub =        nh.advertise<std_msgs::Bool>("nerf/toggle_spin", 1000);
+  trigger_pub =     nh.advertise<std_msgs::Float32>("nerf_turret/trigger", 1000);
+  spin_pub =        nh.advertise<std_msgs::Float32>("nerf_turret/spin", 1000);
 
   //Dynamixel Setup
   uint8_t dxl_error = 0;
@@ -338,11 +339,6 @@ int main(int argc, char ** argv)
     readPositionPIDValues(i);
   }
 
-  // Really ugly way of ensuring that the Arduino I've nearly killed is up and running
-  // before i send any message to the topics it's subscribing to <-- makes it go craaaaazy
-  // 60 second delay
-  lastMoveCommand = ros::Time::now();
-  while(ros::Time::now() - lastMoveCommand < ros::Duration(60)){};
   lastMoveCommand = ros::Time::now();
   lastShootCommand = ros::Time::now();
   
@@ -361,14 +357,14 @@ int main(int argc, char ** argv)
     lastMoveCommand = ros::Time::now();
 
     //stop the pan//tilt dynamixels    
-    updateDynamixel(DXL1_ID,0,4100,7800); //tilt
-    updateDynamixel(DXL2_ID,0,100,3950);  //pan
+    updateDynamixel(DXL1_ID,0,TILT_MIN,TILT_MAX); //tilt
+    updateDynamixel(DXL2_ID,0,PAN_MIN,PAN_MAX);  //pan
     }
   if((ros::Time::now() - lastShootCommand) > ros::Duration(0.2)){
     //stop the NERF blaster motors
-    bool_msg.data = false;
-    // trigger_pub.publish(bool_msg);
-    // spin_pub.publish(bool_msg);
+    float_msg.data = 1;
+    trigger_pub.publish(float_msg);
+    spin_pub.publish(float_msg);
     lastShootCommand = ros::Time::now();
   }
 
