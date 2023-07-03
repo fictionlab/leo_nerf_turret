@@ -1,6 +1,6 @@
 #include "PIDController.h"
 
-PIDController::PIDController(double kp, double ki, double kd,double value_cap) {
+PIDController::PIDController(float kp, float ki, float kd,float value_cap) {
     this->kp = kp;
     this->ki = ki;
     this->kd = kd;
@@ -9,19 +9,34 @@ PIDController::PIDController(double kp, double ki, double kd,double value_cap) {
     integral = 0.0;
 }
 
-double PIDController::calculate(double setpoint, double processVariable, double dt) {
-    double error = setpoint - processVariable;
+float PIDController::calculate(float setpoint, float processVariable, float dt) {
+    float error = setpoint - processVariable;
     integral += error * dt;
 
     if(integral > value_cap){ integral = value_cap;}
     if(integral < -value_cap){ integral = -value_cap;}
 
-    double derivative = (error - prevError) / dt;
-    double output = kp * error + ki * integral + kd * derivative;
+    float derivative = (error - prevError) / dt;
+    float output = kp * error + ki * integral + kd * derivative;
     prevError = error;
 
     if(output > value_cap){ output = value_cap;}
     if(output < -value_cap){ output = -value_cap;}
 
     return output;
+}
+
+void PIDController::tuneKp(float kp){
+    this->kp = kp;
+}
+void PIDController::tuneKi(float ki){
+    this->ki = ki;
+}
+void PIDController::tuneKd(float kd){
+    this->kd = kd;
+}
+void PIDController::tune(float kp, float ki, float kd){
+    this->kp = kp;
+    this->ki = ki;
+    this->kd = kd;
 }

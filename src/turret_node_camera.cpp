@@ -31,6 +31,8 @@
 #include "std_msgs/Int8.h"
 #include "geometry_msgs/Twist.h"
 
+#include "nerf_turret/PID.h"
+
 #include "PIDController.h"
 
 using namespace dynamixel;
@@ -78,8 +80,8 @@ PacketHandler * packetHandler;
 ros::Time lastMoveCommand;
 ros::Time lastShootCommand;
 
-PIDController tilt_pid(TILT_MAX,0,0,TILT_MAX);
-PIDController pan_pid(TILT_MAX,0,0,PAN_MAX);
+PIDController tilt_pid(TILT_SPD,5,0,TILT_SPD);
+PIDController pan_pid(20,2,0.1,PAN_SPD);
 
 ros::Publisher trigger_pub;
 ros::Publisher spin_pub;
@@ -186,18 +188,59 @@ void cameraCallback(const geometry_msgs::Twist::ConstPtr & msg){
   */
 
   if(current_mode == 0){return;}                                //If not in autonoums control mode, return
-  float tilt_error = msg->angular.z;
-  float pan_error  = msg->angular.x;
+  float tilt_error = msg->angular.x;
+  float pan_error  = msg->angular.z;
 
-  int speed_tilt  = tilt_pid.calculate(0,tilt_error,0.03);
-  int speed_pan   = pan_pid.calculate(0,pan_error,0.03);
+  float error_tilt = tilt_pid.calculate(0,tilt_error,0.03);
+  float error_pan = pan_pid.calculate(0,pan_error,0.03);
+
+  ROS_WARN("error pan: %f, error tilt: %f", error_pan, error_tilt);
+
+  int speed_tilt  = mapValue(error_tilt,-TILT_SPD,TILT_SPD,-1000,1000);
+  int speed_pan   = mapValue(error_pan,-PAN_SPD,PAN_SPD,-1000,1000);
+
+  ROS_WARN("pan: %d, tilt: %d", speed_pan, speed_tilt);
 
   lastMoveCommand = ros::Time::now();
   //Tilt
-  updateDynamixel(1,speed_id1,TILT_MIN,TILT_MAX);
+  updateDynamixel(1,speed_tilt,TILT_MIN,TILT_MAX);
   //Pan
-  updateDynamixel(2,speed_id2,PAN_MIN,PAN_MAX);                          //Hardcoded min and max position for pan as the last two parameters :)
+  updateDynamixel(2,speed_pan,PAN_MIN,PAN_MAX);                          //Hardcoded min and max position for pan as the last two parameters :)
 
+}
+
+void panPIDCallback(const nerf_turret::PID::ConstPtr & msg){
+  float kp = msg->kp;
+  float ki = msg->ki;
+  float kd = msg->kd;
+  if (kp < 0){kp = -kp;} 
+  if (ki < 0){ki = -ki;} 
+  if (kd < 0){kd = -kd;} 
+
+  if (kp > PAN_MAX){kp = PAN_MAX;}
+  if (ki > PAN_MAX){ki = PAN_MAX;}
+  if (kd > PAN_MAX){kd = PAN_MAX;}
+
+
+  pan_pid.tune(kp,ki,kd);
+  ROS_ERROR("pan motor kp: %f, ki: %f, kd: %f ", kp,ki,kd);
+}
+
+void tiltPIDCallback(const nerf_turret::PID::ConstPtr & msg){
+  float kp = msg->kp;
+  float ki = msg->kd;
+  float kd = msg->ki;
+  if (kp < 0){kp = -kp;} 
+  if (ki < 0){ki = -ki;} 
+  if (kd < 0){kd = -kd;} 
+
+  if (kp > PAN_MAX){kp = PAN_MAX;}
+  if (ki > PAN_MAX){ki = PAN_MAX;}
+  if (kd > PAN_MAX){kd = PAN_MAX;}
+
+
+  tilt_pid.tune(kp,ki,kd);
+  ROS_ERROR("pan motor kp: %f, ki: %f, kd: %f ", kp,ki,kd);
 }
 
 void changePositionPIDValues(int id, uint16_t kp, uint16_t ki, uint16_t kd){
@@ -294,13 +337,14 @@ void readVelocityPIValues(int id){
 
 int main(int argc, char ** argv)
 {
-
   //ROS setup
   ros::init(argc, argv, "nerf_turret_node");
   ros::NodeHandle nh;
   
   ros::Subscriber set_speed_sub =           nh.subscribe("/joy", 10, joyCallback);
   ros::Subscriber camera_command_sub =      nh.subscribe("/nerf_turret/command",1,cameraCallback);
+  ros::Subscriber panPIDSub =               nh.subscribe("/nerf_turret/pan_pid",1,panPIDCallback);
+  ros::Subscriber tiltPIDsub =              nh.subscribe("/nerf_turret/tilt_pid",1,tiltPIDCallback);
 
   trigger_pub =     nh.advertise<std_msgs::Float32>("nerf_turret/trigger", 1000);
   spin_pub =        nh.advertise<std_msgs::Float32>("nerf_turret/spin", 1000);
